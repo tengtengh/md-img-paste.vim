@@ -1,3 +1,11 @@
+
+# md-img-paste
+
+## 2022.10.18 tengtengh edit
+
+changed the function SaveFileTMPWSL
+
+
 # md-img-paste.vim
 Yet simple tool to paste images into markdown files
 
@@ -61,4 +69,4 @@ install `xclip` first.
 
 ## Acknowledgements
 I'm not yet perfect at writing vim plugins but I managed to do it. Thanks to [Karl Yngve Lervåg](https://vi.stackexchange.com/users/21/karl-yngve-lerv%C3%A5g) and [Rich](https://vi.stackexchange.com/users/343/rich) for help on [vi.stackexchange.com](https://vi.stackexchange.com/questions/14114/paste-link-to-image-in-clipboard-when-editing-markdown) where they proposed a solution for my use case.
-
+t
