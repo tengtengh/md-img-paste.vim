@@ -27,36 +27,58 @@ function! s:SafeMakeDir()
     endif
 endfunction
 
+" function! s:SaveFileTMPWSL(imgdir, tmpname) abort
+"     let tmpfile = a:imgdir . '/' . a:tmpname . '.png'
+"     let tmpfile = substitute(tmpfile, "\/", "\\\\\\", "g")
+"     if tmpfile =~ "mnt"
+"         let tmpfile = substitute(tmpfile, "\\\\\\\\mnt\\\\\\\\c", "C:", "g")
+"     else
+"         let tmpfile = '\\\\wsl\$\\Ubuntu'.tmpfile
+"     endif
+
+"     let clip_command = 'powershell.exe -nologo -noprofile -noninteractive -sta "Add-Type -Assembly PresentationCore;'.
+"           \'\$img = [Windows.Clipboard]::GetImage();'.
+"           \'if (\$img -eq \$null) {'.
+"           \'echo "Do not contain image.";'.
+"           \'Exit;'.
+"           \'} else{'.
+"           \'echo "good";}'.
+"           \'\$fcb = new-object Windows.Media.Imaging.FormatConvertedBitmap(\$img, [Windows.Media.PixelFormats]::Rgb24, \$null, 0);'.
+"           \'\$file = \"'. tmpfile . '\";'.
+"           \'\$stream = [IO.File]::Open(\$file, \"OpenOrCreate\");'.
+"           \'\$encoder = New-Object Windows.Media.Imaging.PngBitmapEncoder;'.
+"           \'\$encoder.Frames.Add([Windows.Media.Imaging.BitmapFrame]::Create(\$fcb));'.
+"           \'\$encoder.Save(\$stream);\$stream.Dispose();"'
+
+"     let result = system(clip_command)[:-3]
+"     if result ==# "good"
+"         return tmpfile
+"     else
+"         return 1
+"     endif
+" endfunction
+
+" 2022.10.18 edit by tengtengh 
 function! s:SaveFileTMPWSL(imgdir, tmpname) abort
-    let tmpfile = a:imgdir . '/' . a:tmpname . '.png'
-    let tmpfile = substitute(tmpfile, "\/", "\\\\\\", "g")
-    if tmpfile =~ "mnt"
-        let tmpfile = substitute(tmpfile, "\\\\\\\\mnt\\\\\\\\c", "C:", "g")
-    else
-        let tmpfile = '\\\\wsl\$\\Ubuntu'.tmpfile
-    endif
+    let folder_path = substitute(system("wslpath -m ".a:imgdir), '\n\+$', '', '')
+    let tmpfile = folder_path . '/' . a:tmpname . '.png'
 
-    let clip_command = 'powershell.exe -nologo -noprofile -noninteractive -sta "Add-Type -Assembly PresentationCore;'.
-          \'\$img = [Windows.Clipboard]::GetImage();'.
-          \'if (\$img -eq \$null) {'.
-          \'echo "Do not contain image.";'.
-          \'Exit;'.
-          \'} else{'.
-          \'echo "good";}'.
-          \'\$fcb = new-object Windows.Media.Imaging.FormatConvertedBitmap(\$img, [Windows.Media.PixelFormats]::Rgb24, \$null, 0);'.
-          \'\$file = \"'. tmpfile . '\";'.
-          \'\$stream = [IO.File]::Open(\$file, \"OpenOrCreate\");'.
-          \'\$encoder = New-Object Windows.Media.Imaging.PngBitmapEncoder;'.
-          \'\$encoder.Frames.Add([Windows.Media.Imaging.BitmapFrame]::Create(\$fcb));'.
-          \'\$encoder.Save(\$stream);\$stream.Dispose();"'
 
-    let result = system(clip_command)[:-3]
-    if result ==# "good"
-        return tmpfile
-    else
+    let clip_command = "Add-Type -AssemblyName System.Windows.Forms;"
+    let clip_command .= "if ([Windows.Forms.Clipboard]::ContainsImage()) {"
+    let clip_command .= "[Windows.Forms.Clipboard]::GetImage().Save(\\\""
+    let clip_command .= tmpfile ."\\\", [System.Drawing.Imaging.ImageFormat]::Png) }"
+    let clip_command = "powershell.exe -sta \"".clip_command. "\""
+
+    call system(clip_command)
+    if v:shell_error == 1
+        echo "error"
         return 1
+    else
+        return tmpfile
     endif
 endfunction
+
 
 function! s:SaveFileTMPLinux(imgdir, tmpname) abort
     if $WAYLAND_DISPLAY != "" && executable('wl-copy')
